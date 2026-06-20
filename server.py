@@ -1,9 +1,9 @@
-from flask import Flask
+from flask import Flask, request
 
 app = Flask(__name__)
 
 
-messages = [{
+chat_messages = [{
         "username":"User",
         "message":"Hello world!!",
     
@@ -14,10 +14,13 @@ messages = [{
         "message":"Hello mars!!",
     }]
 
-@app.route("/messages")
+@app.route("/messages", methods = ["post","get"])
 def messages():
-    print("hello")
-    return messages
+    if(request.method == "POST"):
+        chat_messages.append(request.json)
+
+    return chat_messages
+
 
 @app.route("/")
 def index():
@@ -49,6 +52,7 @@ def index():
     const form = document.querySelector("form");
     const sendMessageForm = document.querySelector("#send-message");
     const username = document.querySelector("input")
+    const messages = document.querySelector("#messages")
     form.addEventListener("submit", event => {
        console.log(username.value)
        event.preventDefault()
@@ -56,17 +60,32 @@ def index():
     sendMessageForm.addEventListener("submit", event => {
        console.log(username.value)
        event.preventDefault()
-       fetch("messages").then(response => {
-            return response.json()
-       }).then(data =>{
-        console.log(data)
-       })
+       fetch("messages", {
+         method: "post",
+            headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  },
+
+  //make sure to serialize your JSON body
+  body: JSON.stringify({
+    username: username.value,
+    message: event.target.querySelector("input").value
+  })
+})
+.then( (response) => { 
+   //do something awesome that makes the world a better place
+});
     })
     setInterval(() => {
     fetch("messages").then(response => {
             return response.json()
        }).then(data =>{
-        console.log(data)
+        let html = ""
+        for(const element of data){
+        html += (`<li>${element.username} : ${element.message}</li>`)
+        }
+        messages.setHTML(html)
        })
     },1000)
     </script>'''
